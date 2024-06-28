@@ -36,19 +36,23 @@ st.header(f"Data for {formatted_date}")
 
 
 # Count the number of recordings for each employee
-recording_counts = df.groupby('employee_id')['recording_id'].count().reset_index()
-recording_counts.columns = ['employee_id', 'recording_count']
+recording_counts = df.groupby(['employee_id', 'first_name', 'last_name'])['recording_id'].count().reset_index()
+recording_counts.columns = ['employee_id', 'first_name', 'last_name', 'recording_count']
 
-# Set the employee_id as the index
-recording_counts.set_index('employee_id', inplace=True)
+# Create a full name column
+recording_counts['full_name'] = recording_counts['first_name'] + ' ' + recording_counts['last_name']
+
+# Set the full name as the index
+recording_counts.set_index('full_name', inplace=True)
+
+# Sort the DataFrame by recording count in descending order
+recording_counts = recording_counts.sort_values('recording_count', ascending=False)
 
 # Create and display the line chart
-
-
 st.line_chart(
     data=recording_counts,
     y='recording_count',
-    x_label='Employee ID',
+    x_label='Employee Name',
     y_label='Number of Recordings',
     color='#FF0000',
     use_container_width=True
