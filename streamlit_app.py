@@ -50,6 +50,7 @@ st.line_chart(
     y='recording_count',
     x_label='Employee ID',
     y_label='Number of Recordings',
+    color='#FF0000',
     use_container_width=True
 )
 
@@ -57,8 +58,10 @@ total_checkins = len(df)
 preshift_checkins = df['PRESHIFT'].sum()
 postshift_checkins = df['POSTSHIFT'].sum()
 
+order = ['Total', 'Pre-shift', 'Post-shift']
+
 chart_data = pd.DataFrame({
-    'Check-in Type': ['Total', 'Pre-shift', 'Post-shift'],
+    'Check-in Type': pd.Categorical(order, categories=order, ordered=True),
     'Count': [total_checkins, preshift_checkins, postshift_checkins]
 })
 
@@ -66,10 +69,9 @@ chart_data = pd.DataFrame({
 chart_data.set_index('Check-in Type', inplace=True)
 
 # Create and display the line chart
-st.line_chart(
+st.bar_chart(
     data=chart_data,
     y='Count',
-    color='#FF0000', 
     x_label='Check-in Type',
     y_label='Number of Check-ins',
     use_container_width=True
