@@ -133,17 +133,35 @@ daily_totals.columns = ['Shift_Date', 'Total_Checkins', 'Pre_Shift_Checkins', 'P
 # Sort by date
 daily_totals = daily_totals.sort_values('Shift_Date')
 
+# Get the min and max dates from the data
+min_date = daily_totals['Shift_Date'].min()
+max_date = daily_totals['Shift_Date'].max()
+
+# Create a date range slider
+date_range = st.slider(
+    "Select report date range",
+    min_value=min_date,
+    max_value=max_date,
+    value=(min_date, max_date)  # Default to full range
+)
+
+# Filter the data based on the selected date range
+filtered_data = daily_totals[
+    (daily_totals['Shift_Date'] >= date_range[0]) & 
+    (daily_totals['Shift_Date'] <= date_range[1])
+]
+
 # Create shift labels
-shift_labels = [f"Shift {i+1}<br>{date.strftime('%m-%d-%y')}" for i, date in enumerate(daily_totals['Shift_Date'])]
+shift_labels = [f"Shift {i+1}<br>{date.strftime('%m-%d-%y')}" for i, date in enumerate(filtered_data['Shift_Date'])]
 
 # Create the line chart using Plotly
 fig = go.Figure()
 
-fig.add_trace(go.Scatter(x=shift_labels, y=daily_totals['Total_Checkins'],
+fig.add_trace(go.Scatter(x=shift_labels, y=filtered_data['Total_Checkins'],
                          mode='lines+markers', name='Total Check-ins'))
-fig.add_trace(go.Scatter(x=shift_labels, y=daily_totals['Pre_Shift_Checkins'],
+fig.add_trace(go.Scatter(x=shift_labels, y=filtered_data['Pre_Shift_Checkins'],
                          mode='lines+markers', name='Pre-Shift Check-ins'))
-fig.add_trace(go.Scatter(x=shift_labels, y=daily_totals['Post_Shift_Checkins'],
+fig.add_trace(go.Scatter(x=shift_labels, y=filtered_data['Post_Shift_Checkins'],
                          mode='lines+markers', name='Post-Shift Check-ins'))
 
 fig.update_layout(
@@ -159,4 +177,4 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # Display the data table
-st.write(daily_totals)
+st.write(filtered_data)
