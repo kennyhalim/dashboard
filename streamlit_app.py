@@ -86,8 +86,24 @@ import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
+# Set the title and favicon that appear in the Browser's tab bar.
+st.set_page_config(
+    page_title='Tenvos-Novachem Dashboard',
+    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
+)
+
+# -----------------------------------------------------------------------------
+
 # Assuming your connection is already set up
 conn = st.connection('mysql', type='sql')
+
+# -----------------------------------------------------------------------------
+# Draw the actual page
+
+# Set the title that appears at the top of the page.
+'''
+# :earth_americas: Tenvos-Novachem Dashboard
+'''
 
 # Fetch data for a longer period
 df = conn.query('CALL dashboardReport()', ttl=600)
