@@ -1,86 +1,3 @@
-# import streamlit as st
-# import pandas as pd
-# import math
-# import numpy as np
-# from pathlib import Path
-# from datetime import datetime
-
-# # Set the title and favicon that appear in the Browser's tab bar.
-# st.set_page_config(
-#     page_title='Tenvos-Novachem Dashboard',
-#     page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
-# )
-
-# # -----------------------------------------------------------------------------
-
-
-# # -----------------------------------------------------------------------------
-# # Draw the actual page
-
-# # Set the title that appears at the top of the page.
-# '''
-# # :earth_americas: Tenvos-Novachem Dashboard
-# '''
-
-# conn = st.connection('mysql', type='sql')
-# df = conn.query('CALL getDailyReport()', ttl=600)
-
-# date_obj = df['Checkin_DateTime'].iloc[0]
-# formatted_date = date_obj.strftime("%m/%d/%Y")
-
-# st.header(f"Data for {formatted_date}")
-# '''
-# '''
-# '''
-# '''
-
-
-# # Count the number of recordings for each employee
-# recording_counts = df.groupby(['employee_id', 'first_name', 'last_name'])['recording_id'].count().reset_index()
-# recording_counts.columns = ['employee_id', 'first_name', 'last_name', 'recording_count']
-
-# # Create a full name column
-# recording_counts['full_name'] = recording_counts['first_name'] + ' ' + recording_counts['last_name']
-
-# # Set the full name as the index
-# recording_counts.set_index('full_name', inplace=True)
-
-# # Sort the DataFrame by recording count in descending order
-# recording_counts = recording_counts.sort_values('recording_count', ascending=False)
-
-# # Create and display the line chart
-# st.line_chart(
-#     data=recording_counts,
-#     y='recording_count',
-#     x_label='Employee Name',
-#     y_label='Number of Recordings',
-#     color='#FF0000',
-#     use_container_width=True
-# )
-
-# total_checkins = len(df)
-# preshift_checkins = df['PRESHIFT'].sum()
-# postshift_checkins = df['POSTSHIFT'].sum()
-
-# order = ['Total', 'Pre-shift', 'Post-shift']
-
-# chart_data = pd.DataFrame({
-#     'Check-in Type': pd.Categorical(order, categories=order, ordered=True),
-#     'Count': [total_checkins, preshift_checkins, postshift_checkins]
-# })
-
-# # Set 'Check-in Type' as the index
-# chart_data.set_index('Check-in Type', inplace=True)
-
-# # Create and display the line chart
-# st.bar_chart(
-#     data=chart_data,
-#     y='Count',
-#     x_label='Check-in Type',
-#     y_label='Number of Check-ins',
-#     use_container_width=True
-# )
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -178,3 +95,76 @@ st.plotly_chart(fig, use_container_width=True)
 
 # Display the data table
 st.write(filtered_data)
+
+# Group by Employee_ID, first_name, last_name, Shift_Date and calculate daily totals for each employee
+employee_daily_totals = df.groupby(['employee_id', 'first_name', 'last_name', 'Shift_Date']).agg({
+    'recording_id': 'count',
+}).reset_index()
+
+employee_daily_totals.columns = ['Employee_ID', 'First_Name', 'Last_Name', 'Shift_Date', 'Total_Checkins']
+
+# Filter the employee data based on the selected date range
+filtered_employee_data = employee_daily_totals[
+    (employee_daily_totals['Shift_Date'] >= date_range[0]) & 
+    (employee_daily_totals['Shift_Date'] <= date_range[1])
+]
+
+# Create a full name column
+filtered_employee_data['Employee_Name'] = filtered_employee_data['First_Name'] + ' ' + filtered_employee_data['Last_Name']
+
+# Sort the data by Shift_Date
+filtered_employee_data = filtered_employee_data.sort_values('Shift_Date')
+
+# Create a mapping of dates to shift numbers
+unique_dates = sorted(filtered_employee_data['Shift_Date'].unique())
+date_to_shift = {date: f"Shift {i+1}" for i, date in enumerate(unique_dates)}
+
+# Apply the shift mapping
+filtered_employee_data['Shift_Label'] = filtered_employee_data['Shift_Date'].map(date_to_shift)
+
+# Create the pivot table for the heatmap
+heatmap_data = filtered_employee_data.pivot(index='Employee_Name', columns='Shift_Label', values='Total_Checkins')
+
+# Ensure all shift numbers are present and in order
+all_shifts = [f"Shift {i+1}" for i in range(len(unique_dates))]
+heatmap_data = heatmap_data.reindex(columns=all_shifts)
+
+# Replace NaN with 0 for no check-ins
+heatmap_data = heatmap_data.fillna(0)
+
+colorscale = [
+    [0, '#cc0000'],     # 0 check-ins
+    [0.33, '#cc0000'],  # Transition point
+    [0.33, '#FFF68F'],  # 1 check-in
+    [0.66, '#FFF68F'],  # Transition point
+    [0.66, '#26a418'],   # 2 or more check-ins
+    [1, '#26a418']
+]
+
+# Create the heatmap
+fig_heatmap = go.Figure(data=go.Heatmap(
+    z=heatmap_data.values,
+    x=heatmap_data.columns,
+    y=heatmap_data.index,
+    colorscale=colorscale,
+    showscale=False,
+    text=heatmap_data.values,
+    texttemplate="%{text}",
+    textfont={"size":10},
+    zmin=0,  # Set minimum value
+    zmax=2   # Set maximum value for color scaling
+))
+
+# Update layout
+fig_heatmap.update_layout(
+    title='Employee Check-ins by Shift',
+    xaxis_title='Shift Number',
+    yaxis_title='Employee Name',
+    xaxis=dict(tickangle=-45),
+    height=800,  # Adjust based on number of employees
+)
+
+# Display the heatmap chart
+st.plotly_chart(fig_heatmap, use_container_width=True)
+
+
