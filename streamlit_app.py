@@ -90,11 +90,28 @@ fig.update_layout(
     xaxis=dict(tickangle=-45)
 )
 
-# Display the chart
-st.plotly_chart(fig, use_container_width=True)
+# # Display the chart
+# st.plotly_chart(fig, use_container_width=True)
 
-# Display the data table
-st.write(filtered_data)
+# # Display the data table
+# st.write(filtered_data)
+
+col1, col2 = st.columns([3, 2])  # Adjust the ratio as needed
+
+with col1:
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    st.write("Check-in Data")
+    st.dataframe(filtered_data.style.format({
+        'Shift_Date': lambda x: x.strftime('%Y-%m-%d'),
+        'Total_Checkins': '{:,.0f}',
+        'Pre_Shift_Checkins': '{:,.0f}',
+        'Post_Shift_Checkins': '{:,.0f}'
+    }), height=400)  # Adjust height as needed
+
+# Add a horizontal line for visual separation
+st.markdown("---")
 
 # Group by Employee_ID, first_name, last_name, Shift_Date and calculate daily totals for each employee
 employee_daily_totals = df.groupby(['employee_id', 'first_name', 'last_name', 'Shift_Date']).agg({
@@ -167,4 +184,28 @@ fig_heatmap.update_layout(
 # Display the heatmap chart
 st.plotly_chart(fig_heatmap, use_container_width=True)
 
+employee_total_checkins = filtered_employee_data.groupby('Employee_Name')['Total_Checkins'].sum().sort_values(ascending=False)
+employee_total_checkins = employee_total_checkins.sort_index()
+
+# Create the bar chart
+fig_bar = go.Figure(data=[
+    go.Bar(
+        x=employee_total_checkins.index,
+        y=employee_total_checkins.values,
+        text=employee_total_checkins.values,
+        textposition='auto',
+    )
+])
+
+# Update layout
+fig_bar.update_layout(
+    title='Total Check-ins per Employee',
+    xaxis_title='Employee Name',
+    yaxis_title='Number of Check-ins',
+    height=600,
+    xaxis=dict(tickangle=-45)
+)
+
+# Display the bar chart
+st.plotly_chart(fig_bar, use_container_width=True)
 
