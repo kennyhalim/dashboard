@@ -109,7 +109,8 @@ st.plotly_chart(fig_countermeasures, use_container_width=True)
 
 # Display the countermeasures data table
 st.write("Countermeasures Data")
-st.dataframe(countermeasures_df.style.format({
+display_df = countermeasures_df[['countermeasure_text', 'count', 'percentage']]
+st.dataframe(display_df.style.format({
     'count': '{:,.0f}',
     'percentage': '{:.2f}%'
 }), height=300)
