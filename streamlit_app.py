@@ -53,7 +53,7 @@ fig_monthly_assessment.add_trace(go.Scatter(
     y=monthly_assessment_df['assessment_count'],
     mode='lines+markers',
     name='Monthly Assessments',
-    line=dict(color='blue'),
+    line=dict(color='black'),
     marker=dict(size=8)
 ))
 
@@ -63,7 +63,7 @@ fig_monthly_assessment.add_trace(go.Scatter(
     y=[max_assessment_month['assessment_count']],
     mode='markers',
     name='Highest Count',
-    marker=dict(symbol='star', size=16, color='red'),
+    marker=dict(symbol='star', size=16, color='green'),
     showlegend=False
 ))
 
@@ -114,3 +114,47 @@ st.dataframe(display_df.style.format({
     'count': '{:,.0f}',
     'percentage': '{:.2f}%'
 }), height=300)
+
+# Add a horizontal line for visual separation
+st.markdown("---")
+
+st.subheader("Causes of Fatigue")
+
+# Call the stored procedure for fatigue causes count
+fatigue_causes_df = conn.query('CALL getCausesOfFatigueCount()', ttl=600)
+
+# Create the bar chart for fatigue causes
+fig_fatigue_causes = go.Figure(data=[go.Bar(
+    x=fatigue_causes_df['fatigue_cause'],
+    y=fatigue_causes_df['count'],
+    text=fatigue_causes_df['count'],
+    textposition='auto',
+    marker_color='darkgreen'  # You can change this color as needed
+)])
+
+fig_fatigue_causes.update_layout(
+    title={
+        'text': 'Causes of Fatigue',
+        'y':0.9,
+        'x':0.5,
+        'xanchor': 'center',
+        'yanchor': 'top'
+    },
+    xaxis_title='Cause of Fatigue',
+    yaxis_title='Count',
+    hovermode='x unified',
+    height=500,  # Adjust the height as needed
+    margin=dict(l=50, r=50, t=80, b=50)
+)
+
+# Improve readability of x-axis labels
+fig_fatigue_causes.update_xaxes(tickangle=-45, tickfont=dict(size=10))
+
+# Display the fatigue causes chart
+st.plotly_chart(fig_fatigue_causes, use_container_width=True)
+
+# Optionally, display the fatigue causes data table
+st.write("Fatigue Causes Data")
+st.dataframe(fatigue_causes_df.style.format({
+    'count': '{:,.0f}'
+}), height=200)
