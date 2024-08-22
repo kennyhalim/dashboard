@@ -164,22 +164,32 @@ def determine_severity(row):
 
 worker_assessment_df['severity'] = worker_assessment_df.apply(determine_severity, axis=1)
 
-#count occurrences of each severity
 severity_counts = worker_assessment_df['severity'].value_counts()
 
-#create pie chart for severity
+total_assessments = severity_counts.sum()
+severity_percentages = (severity_counts / total_assessments * 100).round(1)
+
+severity_order = ['Green', 'Yellow', 'Orange', 'Red']
+severity_colors = {'Green': 'green', 'Yellow': 'yellow', 'Orange': 'orange', 'Red': 'red'}
+sorted_severity_percentages = severity_percentages.reindex(severity_order).fillna(0)
+
+#create pie chart
 fig_severity = go.Figure(data=[go.Pie(
-    labels=severity_counts.index,
-    values=severity_counts.values,
+    labels=sorted_severity_percentages.index,
+    values=sorted_severity_percentages.values,
     hole=.3,
     hoverinfo='label+percent',
-    textinfo='value',
-    marker=dict(colors=['red', 'orange', 'yellow', 'green', 'gray'])
+    textinfo='percent',
+    textposition='inside',
+    insidetextorientation='radial',
+    marker=dict(colors=[severity_colors[severity] for severity in sorted_severity_percentages.index])
 )])
 
-# fig_severity.update_layout(
-#     title='Assessment Severity Distribution',
-# )
+fig_severity.update_traces(textfont_size=12)
+
+fig_severity.update_layout(
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+)
 
 st.plotly_chart(fig_severity, use_container_width=True)
 
