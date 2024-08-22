@@ -89,12 +89,12 @@ fig_countermeasures.update_layout(
 
 st.plotly_chart(fig_countermeasures, use_container_width=True)
 
-st.write("Countermeasures Data")
-display_df = countermeasures_df[['countermeasure_text', 'count', 'percentage']]
-st.dataframe(display_df.style.format({
-    'count': '{:,.0f}',
-    'percentage': '{:.2f}%'
-}), height=300)
+# st.write("Countermeasures Data")
+# display_df = countermeasures_df[['countermeasure_text', 'count', 'percentage']]
+# st.dataframe(display_df.style.format({
+#     'count': '{:,.0f}',
+#     'percentage': '{:.2f}%'
+# }), height=300)
 
 st.markdown("---")
 
@@ -129,7 +129,84 @@ fig_fatigue_causes.update_xaxes(tickangle=-45, tickfont=dict(size=10))
 
 st.plotly_chart(fig_fatigue_causes, use_container_width=True)
 
-st.write("Fatigue Causes Data")
-st.dataframe(fatigue_causes_df.style.format({
-    'count': '{:,.0f}'
-}), height=200)
+# st.write("Fatigue Causes Data")
+# st.dataframe(fatigue_causes_df.style.format({
+#     'count': '{:,.0f}'
+# }), height=200)
+
+#one pie chart for severity
+
+#bar chart
+st.markdown("---")
+
+st.subheader("Assessment Severity")
+
+#fetch sql data
+worker_assessment_df = conn.query('''
+    SELECT 
+        question_one_answer, question_two_answer, question_three_answer,
+        question_four_answer, question_five_answer, question_six_answer
+    FROM 
+        t_worker_assessment
+''', ttl=600)
+
+def determine_severity(row):
+    if row['question_six_answer'] == 1:
+        return 'Red'
+    elif row['question_five_answer'] == 1:
+        return 'Orange'
+    elif row['question_four_answer'] == 1:
+        return 'Yellow'
+    elif row['question_one_answer'] == 1 or row['question_two_answer'] == 1 or row['question_three_answer'] == 1:
+        return 'Green'
+    else:
+        return 'Green'
+
+worker_assessment_df['severity'] = worker_assessment_df.apply(determine_severity, axis=1)
+
+#count occurrences of each severity
+severity_counts = worker_assessment_df['severity'].value_counts()
+
+#create pie chart for severity
+fig_severity = go.Figure(data=[go.Pie(
+    labels=severity_counts.index,
+    values=severity_counts.values,
+    hole=.3,
+    hoverinfo='label+percent',
+    textinfo='value',
+    marker=dict(colors=['red', 'orange', 'yellow', 'green', 'gray'])
+)])
+
+# fig_severity.update_layout(
+#     title='Assessment Severity Distribution',
+# )
+
+st.plotly_chart(fig_severity, use_container_width=True)
+
+st.markdown("---")
+
+st.subheader("Severity Distribution")
+
+severity_order = ['Green', 'Yellow', 'Orange', 'Red']
+severity_colors = {'Green': 'green', 'Yellow': 'yellow', 'Orange': 'orange', 'Red': 'red'}
+
+sorted_severity_counts = severity_counts.reindex(severity_order).fillna(0)
+
+#create horizontal bar chart
+fig_severity_bar = go.Figure(data=[go.Bar(
+    y=sorted_severity_counts.index,
+    x=sorted_severity_counts.values,
+    orientation='h',
+    text=sorted_severity_counts.values,
+    textposition='auto',
+    marker_color=[severity_colors[severity] for severity in sorted_severity_counts.index]
+)])
+
+fig_severity_bar.update_layout(
+    xaxis_title='Count',
+    yaxis_title='Severity Level',
+    height=400,
+    margin=dict(l=50, r=50, t=80, b=50)
+)
+
+st.plotly_chart(fig_severity_bar, use_container_width=True)
