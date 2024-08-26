@@ -8,6 +8,9 @@ conn = st.connection('mysql', type='sql')
 
 st.title('Fatigue Risk Management Dashboard')
 
+st.markdown("April 2024 - August 2024")
+
+
 st.markdown("---")
 
 #st.subheader("Monthly Worker Assessment Count")
@@ -212,6 +215,7 @@ def determine_severity(row):
 worker_assessment_df['severity'] = worker_assessment_df.apply(determine_severity, axis=1)
 
 severity_counts = worker_assessment_df['severity'].value_counts()
+#st.dataframe(severity_counts)
 
 total_assessments = severity_counts.sum()
 severity_percentages = (severity_counts / total_assessments * 100).round(1)
@@ -219,6 +223,8 @@ severity_percentages = (severity_counts / total_assessments * 100).round(1)
 severity_order = ['Mild', 'Mild to Moderate', 'Moderate to Severe', 'Severe']
 severity_colors = {'Mild': '#9fe59f', 'Mild to Moderate': '#f5f578', 'Moderate to Severe': '#f5b779', 'Severe': '#ff8a8a'}
 sorted_severity_percentages = severity_percentages.reindex(severity_order).fillna(0)
+
+
 
 #create pie chart
 fig_severity = go.Figure(data=[go.Pie(
@@ -231,6 +237,7 @@ fig_severity = go.Figure(data=[go.Pie(
     insidetextorientation='radial',
     marker=dict(colors=[severity_colors[severity] for severity in sorted_severity_percentages.index])
 )])
+
 
 fig_severity.update_traces(textfont_size=12)
 
@@ -264,7 +271,8 @@ fig_severity_bar.update_layout(
     xaxis_title='Count',
     yaxis_title='Severity Level',
     height=400,
-    margin=dict(l=50, r=50, t=80, b=50)
+    margin=dict(l=50, r=50, t=80, b=50),
+    hovermode='y unified'
 )
 
 #fig_severity_bar.update_layout(
@@ -288,80 +296,131 @@ st.markdown("**Countermeasures**")
 
 countermeasures_df = conn.query('CALL getCountermeasuresData()', ttl=600)
 
+countermeasures_df = countermeasures_df[:5]
+
+countermeasures_df = countermeasures_df.set_index('countermeasure_short')
+#st.dataframe(countermeasures_df)
+
+countermeasures_sr = countermeasures_df['percentage']
+#st.dataframe(countermeasures_sr)
+
+
+countermeasure_order = ['Nap', 'High Protein Foods', 'Hydration', 'Avoid Sugar','Caffeine']
+countermeasure_colors = {'Nap': '#a4d164', 'High Protein Foods': '#8fbc98', 'Hydration': '#689d87', 'Avoid Sugar': '#4e7464', 'Caffeine':'#2d6065'}
+sorted_countermeasures_sr = countermeasures_sr.reindex(countermeasure_order).fillna(0)
+
 fig_countermeasures = go.Figure(data=[go.Pie(
-    #labels=countermeasures_df['countermeasure_text'],
-    values=countermeasures_df['percentage'],
+    labels=sorted_countermeasures_sr.index,
+    values=sorted_countermeasures_sr.values,
     hole=.3,
     hoverinfo='label+percent',
-    textinfo='value',
+    textinfo='percent',
     textposition='inside',
-    insidetextorientation='radial'
+    insidetextorientation='radial',
+    marker=dict(colors=[countermeasure_colors[countermeasure] for countermeasure in sorted_countermeasures_sr.index])
+
+    #showlegend=False
     
 )])
 
-fig_countermeasures.update_traces(
-            hoverinfo="label+value",
-            textinfo="percent",
-            marker=dict(
-                colors=[
-                    "#a4d164",
-                    "#8fbc98",
-                    "#689d87",
-                    "#4e7464",
-                    "#2d6065",
-                    "#125972"                                       
-                ]
-            )
-        )
-
+fig_countermeasures.update_traces(textfont_size=12)
 
 fig_countermeasures.update_layout(
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 )
 
 
+#fig_countermeasures.update_traces(
+#            hoverinfo="label+value",
+#            textinfo="percent",
+#            marker=dict(
+#                colors=[
+#                    "#a4d164",
+#                    "#8fbc98",
+#                    "#689d87",
+#                    "#4e7464",
+#                    "#2d6065",
+#                    "#125972"                                       
+#                ]
+#            )
+#        )
+
+
+#fig_countermeasures.update_layout(
+#    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+#)
+
+#fig_countermeasures.update_layout(legend=dict(
+#    orientation="h",
+#    #entrywidth=70,
+#    yanchor="bottom",
+#    y=1.02,
+#    xanchor="right",
+#    x=-70
+#))
+
+#fig_severity.update_layout(
+#    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=-10)
+#)
+
 
 #st.plotly_chart(fig_countermeasures, use_container_width=True)
 
 
-diction = {'measure':["Coffee", "Nap", "Exercise"],
-        'effect': [0.2, 1.8, 1.5]}
 
-#countermeasure_eff_df = pd.DataFrame(columns=['measure', 'effect'])
-countermeasure_eff_df = pd.DataFrame(diction, index=["0", "1", "2"])
+diction = {'measure':["Nap", "High Protein Foods", "Hydration", "Avoid Sugar", "Caffeine"],
+        'effect': [1.8,0.7, 0.5, 0.1 ,0.3]}
 
+countermeasure_eff_df = pd.DataFrame(diction, index=["0", "1", "2", "3", "4"])
 
+countermeasure_eff_df = countermeasure_eff_df.set_index('measure')
+
+countermeasure_eff_order = ["Nap", "High Protein Foods", "Hydration", "Avoid Sugar", "Caffeine"]
+countermeasure_colors = {'Nap': '#a4d164', 'High Protein Foods': '#8fbc98', 'Hydration': '#689d87', 'Avoid Sugar': '#4e7464', 'Caffeine':'#2d6065'}
+
+sorted_countermeasures_eff_df = countermeasure_eff_df.reindex(countermeasure_eff_order).fillna(0)
+
+#st.dataframe(countermeasure_eff_df['effect'])
 
 countermeasure_eff =  go.Figure(data=[go.Bar(
-    x=countermeasure_eff_df['measure'],
+    x=countermeasure_eff_order, #countermeasure_eff_df['measure'],
     y=countermeasure_eff_df['effect'],
     text=countermeasure_eff_df['effect'],
     textposition='auto',
-    marker_color='#a4d164'
+    marker_color=[countermeasure_colors[cm] for cm in sorted_countermeasures_eff_df.index]
 )])
 
 countermeasure_eff.update_layout(
-    title={
-        #'text': 'Countermeasure Effectiveness',
-        'y':0.9,
-        'x':0.5,
-        'xanchor': 'center',
-        'yanchor': 'top'
-    },
     xaxis_title='Countermeasure',
     yaxis_title='Average Effect on Fatigue',
-    #hovermode='label+percent',
-    hovermode='x unified',
-    height=400
+    height=400,
+    margin=dict(l=50, r=50, t=80, b=50),
+    hovermode='x unified'
 )
 
-countermeasure_eff.update_xaxes(tickangle=-45, tickfont=dict(size=10))
 
-countermeasure_eff.update_layout(
-    title=' ', #Countermeasure Effectiveness',
-    margin=dict(l=50, r=50, t=80, b=50)
+#countermeasure_eff.update_layout(
+#    title={
+#        #'text': 'Countermeasure Effectiveness',
+#        'y':0.9,
+#        'x':0.5,
+#        'xanchor': 'center',
+#        'yanchor': 'top'
+#    },
+#    xaxis_title='Countermeasure',
+#    yaxis_title='Average Effect on Fatigue',
+#    #hovermode='label+percent',
+#    hovermode='x unified',
+#    height=400
+#)
+
+#countermeasure_eff.update_xaxes(tickangle=-45, tickfont=dict(size=10))
+
+#countermeasure_eff.update_layout(
+#    title=' ', #Countermeasure Effectiveness',
+#    margin=dict(l=50, r=50, t=80, b=50)
     
-)
+#)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -392,7 +451,8 @@ fig_fatigue_causes = go.Figure(data=[go.Bar(
     y=fatigue_causes_df['count'],
     text=fatigue_causes_df['count'],
     textposition='auto',
-    marker_color='#a4d164'
+    marker_color= '#4e7464' #'#a4d164'
+
 )])
 
 fig_fatigue_causes.update_layout(
