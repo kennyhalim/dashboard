@@ -259,7 +259,7 @@ sorted_severity_counts = severity_counts.reindex(severity_order).fillna(0)
 
 #create horizontal bar chart
 fig_severity_bar = go.Figure(data=[go.Bar(
-    #y=sorted_severity_counts.index,
+    y=sorted_severity_counts.index,
     x=sorted_severity_counts.values,
     orientation='h',
     text=sorted_severity_counts.values,
