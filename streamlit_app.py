@@ -7,7 +7,9 @@ from calendar import month_abbr
 conn = st.connection('mysql', type='sql')
 
 st.title('Fatigue Risk Management Dashboard')
+
 st.markdown("April 2024 - August 2024")
+
 
 st.markdown("---")
 
@@ -218,8 +220,6 @@ severity_counts = worker_assessment_df['severity'].value_counts()
 total_assessments = severity_counts.sum()
 severity_percentages = (severity_counts / total_assessments * 100).round(1)
 
-
-
 severity_order = ['Mild', 'Mild to Moderate', 'Moderate to Severe', 'Severe']
 severity_colors = {'Mild': '#9fe59f', 'Mild to Moderate': '#f5f578', 'Moderate to Severe': '#f5b779', 'Severe': '#ff8a8a'}
 sorted_severity_percentages = severity_percentages.reindex(severity_order).fillna(0)
@@ -259,7 +259,7 @@ sorted_severity_counts = severity_counts.reindex(severity_order).fillna(0)
 
 #create horizontal bar chart
 fig_severity_bar = go.Figure(data=[go.Bar(
-    y=sorted_severity_counts.index,
+    #y=sorted_severity_counts.index,
     x=sorted_severity_counts.values,
     orientation='h',
     text=sorted_severity_counts.values,
@@ -293,7 +293,6 @@ st.markdown("---")
 st.markdown("**Countermeasures**")
 
 #st.subheader("Countermeasures")
-
 
 countermeasures_df = conn.query('CALL getCountermeasuresData()', ttl=600)
 
@@ -330,6 +329,7 @@ fig_countermeasures.update_layout(
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 )
 
+
 #fig_countermeasures.update_traces(
 #            hoverinfo="label+value",
 #            textinfo="percent",
@@ -363,7 +363,9 @@ fig_countermeasures.update_layout(
 #    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=-10)
 #)
 
+
 #st.plotly_chart(fig_countermeasures, use_container_width=True)
+
 
 
 diction = {'measure':["Nap", "High Protein Foods", "Hydration", "Avoid Sugar", "Caffeine"],
@@ -450,6 +452,7 @@ fig_fatigue_causes = go.Figure(data=[go.Bar(
     text=fatigue_causes_df['count'],
     textposition='auto',
     marker_color= '#4e7464' #'#a4d164'
+
 )])
 
 fig_fatigue_causes.update_layout(
