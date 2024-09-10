@@ -8,7 +8,7 @@ conn = st.connection('mysql', type='sql')
 
 st.title('Fatigue Risk Management Dashboard')
 
-st.markdown("April 2024 - August 2024")
+#st.markdown("April 2024 - August 2024")
 
 
 st.markdown("---")
@@ -22,7 +22,8 @@ monthly_assessment_df = conn.query('''
     FROM 
         t_worker_assessment
     WHERE 
-        created_dt >= '2024-04-01' AND created_dt <= '2024-08-31' 
+        t_worker_assessment.employee_id IN (335,336,337,338,339,340,341,342,343,344,345,353) AND                 
+        created_dt >= '2024-09-10'
     GROUP BY 
         DATE_FORMAT(created_dt, '%Y-%m')
     ORDER BY 
@@ -41,7 +42,8 @@ severe_assessment_df = conn.query('''
     FROM 
         t_worker_assessment
     WHERE 
-        created_dt >= '2024-04-01' AND created_dt <= '2024-08-31' AND question_six_answer = '1'                           
+        t_worker_assessment.employee_id IN (335,336,337,338,339,340,341,342,343,344,345,353) AND
+        created_dt >= '2024-09-10' AND question_six_answer = '1'                           
     GROUP BY 
         DATE_FORMAT(created_dt, '%Y-%m')
     ORDER BY 
@@ -58,8 +60,9 @@ modsev_assessment_df = conn.query('''
         COUNT(*) as assessment_count
     FROM 
         t_worker_assessment
-    WHERE 
-        created_dt >= '2024-04-01' AND created_dt <= '2024-08-31' AND question_five_answer = '1'                           
+    WHERE
+        t_worker_assessment.employee_id IN (335,336,337,338,339,340,341,342,343,344,345,353) AND 
+        created_dt >= '2024-09-10' AND question_five_answer = '1'                           
     GROUP BY 
         DATE_FORMAT(created_dt, '%Y-%m')
     ORDER BY 
@@ -76,8 +79,9 @@ mildmod_assessment_df = conn.query('''
         COUNT(*) as assessment_count
     FROM 
         t_worker_assessment
-    WHERE 
-        created_dt >= '2024-04-01' AND created_dt <= '2024-08-31' AND question_four_answer = '1'                           
+    WHERE
+        t_worker_assessment.employee_id IN (335,336,337,338,339,340,341,342,343,344,345,353) AND 
+        created_dt >= '2024-09-10' AND question_four_answer = '1'                           
     GROUP BY 
         DATE_FORMAT(created_dt, '%Y-%m')
     ORDER BY 
@@ -94,8 +98,9 @@ mild_assessment_df = conn.query('''
         COUNT(*) as assessment_count
     FROM 
         t_worker_assessment
-    WHERE 
-        created_dt >= '2024-04-01' AND created_dt <= '2024-08-31' AND (question_one_answer = '1' OR question_two_answer = '1' OR question_three_answer = '1')                    
+    WHERE
+        t_worker_assessment.employee_id IN (335,336,337,338,339,340,341,342,343,344,345,353) AND 
+        created_dt >= '2024-09-10' AND (question_one_answer = '1' OR question_two_answer = '1' OR question_three_answer = '1')                    
     GROUP BY 
         DATE_FORMAT(created_dt, '%Y-%m')
     ORDER BY 
@@ -198,7 +203,12 @@ worker_assessment_df = conn.query('''
         question_four_answer, question_five_answer, question_six_answer
     FROM 
         t_worker_assessment
+    WHERE 
+        t_worker_assessment.employee_id IN (335,336,337,338,339,340,341,342,343,344,345,353) AND
+        created_dt > '2024-09-10'                   
 ''', ttl=600)
+
+#st.dataframe(worker_assessment_df)
 
 def determine_severity(row):
     if row['question_six_answer'] == 1:
@@ -295,7 +305,7 @@ st.markdown("**Countermeasures**")
 #st.subheader("Countermeasures")
 
 countermeasures_df = conn.query('CALL getCountermeasuresData()', ttl=600)
-
+#st.dataframe(countermeasures_df)
 countermeasures_df = countermeasures_df[:5]
 
 countermeasures_df = countermeasures_df.set_index('countermeasure_short')
@@ -369,7 +379,7 @@ fig_countermeasures.update_layout(
 
 
 diction = {'measure':["Nap", "High Protein Foods", "Hydration", "Avoid Sugar", "Caffeine"],
-        'effect': [1.8,0.7, 0.5, 0.1 ,0.3]}
+        'effect': [0,0, 0, 0 ,0]}
 
 countermeasure_eff_df = pd.DataFrame(diction, index=["0", "1", "2", "3", "4"])
 
@@ -445,7 +455,7 @@ st.markdown("---")
 #st.subheader("Causes of Fatigue")
 
 fatigue_causes_df = conn.query('CALL getCausesOfFatigueCount()', ttl=600)
-
+#st.dataframe(fatigue_causes_df)
 fig_fatigue_causes = go.Figure(data=[go.Bar(
     x=fatigue_causes_df['fatigue_cause'],
     y=fatigue_causes_df['count'],
