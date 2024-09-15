@@ -1,4 +1,4 @@
-# :earth_americas: GDP dashboard template
+# Fatigur Risk Management dashboard
 
 A simple Streamlit app showing the GDP of different countries in the world.
 
