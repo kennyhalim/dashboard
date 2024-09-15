@@ -1,6 +1,6 @@
 # Fatigur Risk Management dashboard
 
-A simple Streamlit app showing the GDP of different countries in the world.
+Dashboard that shows the stats for the Fatigur Risk Management at CAR
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://gdp-dashboard-template.streamlit.app/)
 
